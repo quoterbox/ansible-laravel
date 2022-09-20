@@ -1,0 +1,63 @@
+# LEMP PLAYBOOK
+---
+- name: "Install prerequisites"
+  hosts: www
+  user: "{{ sudo_user }}"
+  become: true
+  gather_facts: false
+  vars_files:
+    - group_vars/main.yml
+    - vars/main.yml
+  tasks:
+    - name: "Add repository for PHP 8.1"
+      apt_repository: "repo='ppa:ondrej/php'"
+    - name: "Install ansible python3 mysql dependency"
+      apt:
+        name: python3-mysqldb
+        state: latest
+
+- name: "Add the user {{ web_user }}"
+  hosts: www
+  user: "{{ sudo_user }}"
+  become: true
+  gather_facts: false
+  vars_files:
+    - group_vars/main.yml
+    - vars/main.yml
+  tasks:
+    - name: "Add the user"
+      ansible.builtin.user:
+        name: "{{ web_user }}"
+        comment: "Web user"
+        group: "www-data"
+    - name: "Set up authorized keys for the web user"
+      authorized_key:
+        user: "{{ web_user }}"
+        key: '{{ lookup("file", "{{ web_user_public_key_file }}") }}'
+
+- name: "LEMP Provisioning"
+  hosts: www
+  user: "{{ sudo_user }}"
+  become: true
+  vars_files:
+    - group_vars/main.yml
+    - vars/main.yml
+  roles:
+    - { role: geerlingguy.nginx }
+    - { role: geerlingguy.certbot }
+    - { role: geerlingguy.php }
+    - { role: geerlingguy.mysql }
+    - { role: geerlingguy.php-mysql }
+#    - { role: geerlingguy.memcached }
+#    - { role: geerlingguy.git }
+#    - { role: geerlingguy.composer }
+#    - { role: geerlingguy.nodejs }
+  tasks:
+#    - name: "Reload NGINX"
+#      ansible.builtin.service:
+#        name: nginx
+#        state: reloaded
+    - name: "Restart NGINX"
+      ansible.builtin.service:
+        name: nginx
+        state: restarted

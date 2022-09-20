@@ -1,0 +1,157 @@
+php_enable_php_fpm: true
+php_fpm_pools:
+  - pool_name: "www"
+    pool_template: "www.conf.j2"
+    pool_listen: "127.0.0.1:9000"
+    pool_listen_allowed_clients: "127.0.0.1"
+    pool_pm: "dynamic"
+    pool_pm_max_children: "5"
+    pool_pm_start_servers: "2"
+    pool_pm_min_spare_servers: "1"
+    pool_pm_max_spare_servers: "3"
+    pool_pm_max_requests: "500"
+php_fpm_pool_user: "{{ web_user }}"
+php_fpm_pool_group: "{{ web_user_group }}"
+php_version: "8.1"
+php_default_version_debian: "8.1"
+php_packages_state: latest
+php_use_managed_ini: true
+php_memory_limit: "512M"
+php_max_execution_time: "90"
+php_upload_max_filesize: "256M"
+php_packages:
+  - php8.1-apcu
+  - php8.1-common
+  - php8.1-intl
+  - php8.1-cli
+  - php8.1-dev
+  - php8.1-fpm
+  - libpcre3-dev
+  - php8.1-gd
+  - php8.1-curl
+  - php8.1-imap
+#  - php8.1-json
+  - php-mbstring
+  - php8.1-mcrypt
+  - php8.1-opcache
+  - php8.1-pdo
+  - php8.1-xml
+  - php8.1-mbstring
+  - php8.1-zip
+  - php8.1-mysql
+php_date_timezone: "Europe/Moscow"
+php_webserver_daemon: "nginx"
+php_fpm_daemon: php8.1-fpm
+
+mysql_packages:
+  - mariadb-client
+  - mariadb-server
+  - python3-mysqldb
+
+mysql_root_password: "{{ ansible_mysql_root_password }}"
+mysql_databases:
+  - name: "{{ database_name }}"
+    encoding: utf8mb4
+    collation: utf8mb4_unicode_ci
+mysql_users:
+  - name: "{{ database_user }}"
+    host: "%"
+    password: "{{ database_user_password }}"
+    priv: "example_db.*:ALL"
+
+nginx_server_names_hash_bucket_size: "128"
+nginx_remove_default_vhost: true
+#one vhost, one block, filename is server_name unless added
+nginx_vhosts:
+  - listen: "80"
+    server_name: "{{ domain }} www.{{ domain }}"
+    root: "/var/www/{{ domain }}/src/public"
+    state: "present"
+    filename: "{{domain}}.80.conf"
+    return: "301 https://{{domain}}$request_uri"
+  - listen: "443 ssl http2"
+    server_name: "{{ domain }} www.{{ domain }}"
+    root: "/var/www/{{ domain }}/src/public"
+    index: "index.php"
+    state: "present"
+    template: "{{ nginx_vhost_template }}"
+    filename: "{{domain}}.conf"
+    extra_parameters: |
+
+      # Force www.site.com => site.com
+      if ($host ~* ^www\.(.+)$) {
+        return 301 $scheme://$1$request_uri;
+      }
+
+      # Remove index.php$
+      if ($request_uri ~* "^(.*/)index\.php$") {
+        return 301 $1;
+      }
+
+      # Disable MIME sniffing
+      add_header X-Content-Type-Options 'nosniff' always;
+
+      # HSTS
+      #add_header Strict-Transport-Security 'max-age=2592000' always;
+
+      # Disable access to hidden files/folders
+      location ~* /\.(?!well-known/) {
+        deny all;
+        log_not_found off;
+        access_log off;
+      }
+
+      # Disable access to backup/config/command/log files
+      location ~* (?:\.(?:bak|co?nf(ig)?|in[ci]|log|sh|sql|tar|t?gz)|~)$ {
+        deny all;
+      }
+
+      location ~* ^.+\.(?:css(\.map)?|js(\.map)?|jpe?g|png|gif|ico|cur|heic|webp|tiff?|mp3|m4a|aac|ogg|midi?|wav|mp4|mov|webm|mpe?g|avi|ogv|flv|wmv|svgz?|ttf|ttc|otf|eot|woff2?)$ {
+        expires 1d;
+        access_log off;
+      }
+
+      location / {
+        # Force index.php routing (if not found)
+        #try_files $uri $uri/ /index.php?$query_string =404;
+        try_files $uri /index.php$is_args$args;
+
+        # Remove from everywhere index.php
+        #if ($request_uri ~* "^(.*/)index\.php(/?)(.*)") {
+        #    return 301 $1$3;
+        #}
+
+        # Force index.php routing (all requests)
+        #rewrite ^/(.*)$ /index.php?/$1 last;
+      }
+
+      location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        #fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+      }
+
+      location ~ \.php$ {
+        return 404;
+      }
+
+      ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+      ssl_protocols       TLSv1.1 TLSv1.2 TLSv1.3;
+      ssl_ciphers         HIGH:!aNULL:!MD5;
+
+# Certbot Details if used instead of own SSL Certificates
+certbot_create_if_missing: true
+certbot_auto_renew_user: "{{ sudo_user }}"
+certbot_auto_renew_minute: 20
+certbot_auto_renew_hour: 5
+certbot_admin_email: "{{ admin_email }}"
+certbot_auto_renew_options: '--quiet --no-self-upgrade --pre-hook "service nginx stop" --post-hook "service nginx start"'
+certbot_certs:
+  - domains:
+    - "{{ domain }}"
+    - "www.{{ domain }}"
+#certbot_install_method: snap
