@@ -1,6 +1,6 @@
 ## Start LEMP server with Ansible
 
-Данный playbook для Ansible устанавливает на удаленный сервер Nginx, PHP и SSL сертификат Let's Encrypt.
+Данный playbook для Ansible устанавливает на удаленный сервер Nginx, PHP, MySQL и SSL сертификат Let's Encrypt.
 
 **Требования для запуска:**
 1. Локальная или удаленная машина на Ubuntu, с которой будет производиться настройка удаленного сервера.
