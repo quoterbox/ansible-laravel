@@ -1,0 +1,14 @@
+---
+domain: yourdomain.com
+web_user: www
+web_user_group: www-data
+admin_email: admin@yourdomain.com
+sudo_user: root
+ansible_connection: ssh
+ansible_ssh_private_key_file: ../.ssh/yourdomain_root
+web_user_private_key_file: ../.ssh/yourdomain_www
+web_user_public_key_file: ../.ssh/yourdomain.pub
+database_name: your_database_name
+database_user: your_database_user
+database_user_password: your_database_user_password
+ansible_mysql_root_password: your_ansible_mysql_root_password
