@@ -9,12 +9,21 @@
     - group_vars/main.yml
     - vars/main.yml
   tasks:
-    - name: "Add repository for PHP 8.1"
-      apt_repository: "repo='ppa:ondrej/php'"
-    - name: "Install ansible python3 mysql dependency"
-      apt:
-        name: python3-mysqldb
-        state: latest
+#    - name: "Add repository for PHP {{ php_version }}"
+#      apt_repository: "repo='ppa:ondrej/php'"
+    - name: "Add repository key for MySQL {{ mysql_version }}"
+      apt_key:
+        keyserver: "pgp.mit.edu"
+        id: "{{ mysql_key }}"
+        state: "present"
+    - name: "Add repository for MySQL {{ mysql_version }}"
+      apt_repository:
+        repo: "deb https://repo.mysql.com/apt/ubuntu/ focal mysql-{{ mysql_version }}"
+        state: "present"
+#    - name: "Install ansible python3 mysql dependency"
+#      apt:
+#        name: python3-mysqldb
+#        state: latest
 
 - name: "Add the user {{ web_user }}"
   hosts: www

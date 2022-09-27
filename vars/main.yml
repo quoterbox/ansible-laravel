@@ -1,3 +1,13 @@
+php_version: "8.1"
+php_default_version_debian: "{{ php_version }}"
+mysql_version: "8.0"
+mysql_key_8: "3A79BD29"
+mysql_key_5: "5072E1F5"
+mysql_key: "{{ mysql_key_8 }}"
+#mysql_version: "8.0.29"
+#nginx_version: "1.21.6-alpine"
+#redis_version: "alpine"
+
 php_enable_php_fpm: true
 php_fpm_pools:
   - pool_name: "www"
@@ -12,41 +22,63 @@ php_fpm_pools:
     pool_pm_max_requests: "500"
 php_fpm_pool_user: "{{ web_user }}"
 php_fpm_pool_group: "{{ web_user_group }}"
-php_version: "8.1"
-php_default_version_debian: "8.1"
 php_packages_state: latest
 php_use_managed_ini: true
 php_memory_limit: "512M"
 php_max_execution_time: "90"
 php_upload_max_filesize: "256M"
 php_packages:
-  - php8.1-apcu
-  - php8.1-common
-  - php8.1-intl
-  - php8.1-cli
-  - php8.1-dev
-  - php8.1-fpm
+  - php-apcu
+  - php-common
+  - php-intl
+  - php-cli
+  - php-dev
+  - php-fpm
   - libpcre3-dev
-  - php8.1-gd
-  - php8.1-curl
-  - php8.1-imap
-#  - php8.1-json
+  - php-gd
+  - php-curl
+  - php-imap
+  - php-json
+#  - php-mcrypt
+  - php-opcache
+  - php-pdo
+  - php-xml
   - php-mbstring
-  - php8.1-mcrypt
-  - php8.1-opcache
-  - php8.1-pdo
-  - php8.1-xml
-  - php8.1-mbstring
-  - php8.1-zip
-  - php8.1-mysql
+  - php-zip
+  - php-mysql
+#php_packages:
+#  - php{{ php_version }}-apcu
+#  - php{{ php_version }}-common
+#  - php{{ php_version }}-intl
+#  - php{{ php_version }}-cli
+#  - php{{ php_version }}-dev
+#  - php{{ php_version }}-fpm
+#  - libpcre3-dev
+#  - php{{ php_version }}-gd
+#  - php{{ php_version }}-curl
+#  - php{{ php_version }}-imap
+##  - php8.1-json
+#  - php-mbstring
+#  - php{{ php_version }}-mcrypt
+#  - php{{ php_version }}-opcache
+#  - php{{ php_version }}-pdo
+#  - php{{ php_version }}-xml
+#  - php{{ php_version }}-mbstring
+#  - php{{ php_version }}-zip
+#  - php{{ php_version }}-mysql
 php_date_timezone: "Europe/Moscow"
 php_webserver_daemon: "nginx"
-php_fpm_daemon: php8.1-fpm
+php_fpm_daemon: php{{ php_version }}-fpm
 
 mysql_packages:
-  - mariadb-client
-  - mariadb-server
+  - mysql-client
+  - mysql-server
   - python3-mysqldb
+#mysql_packages:
+#  - mariadb-client
+#  - mariadb-server
+#  - python3-mysqldb
+#mysql_python_package_debian: python3-mysqldb
 
 mysql_root_password: "{{ ansible_mysql_root_password }}"
 mysql_databases:
