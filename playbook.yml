@@ -9,8 +9,8 @@
     - group_vars/main.yml
     - vars/main.yml
   tasks:
-#    - name: "Add repository for PHP {{ php_version }}"
-#      apt_repository: "repo='ppa:ondrej/php'"
+    - name: "Add repository for PHP {{ php_version }}"
+      apt_repository: "repo='ppa:ondrej/php'"
     - name: "Add repository key for MySQL {{ mysql_version }}"
       apt_key:
         keyserver: "pgp.mit.edu"
@@ -20,10 +20,6 @@
       apt_repository:
         repo: "deb https://repo.mysql.com/apt/ubuntu/ focal mysql-{{ mysql_version }}"
         state: "present"
-#    - name: "Install ansible python3 mysql dependency"
-#      apt:
-#        name: python3-mysqldb
-#        state: latest
 
 - name: "Add the user {{ web_user }}"
   hosts: www
@@ -62,11 +58,10 @@
 #    - { role: geerlingguy.composer }
 #    - { role: geerlingguy.nodejs }
   tasks:
-#    - name: "Reload NGINX"
+    - name: "Just force systemd to reread configs"
+      ansible.builtin.systemd:
+        daemon_reload: yes
+#    - name: "Restart NGINX"
 #      ansible.builtin.service:
 #        name: nginx
-#        state: reloaded
-    - name: "Restart NGINX"
-      ansible.builtin.service:
-        name: nginx
-        state: restarted
+#        state: restarted
